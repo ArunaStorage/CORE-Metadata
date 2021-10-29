@@ -1,0 +1,17 @@
+consumer_count = 1
+
+[mongo]
+servers = ["localhost:27017"]
+database = "nfdi-test"
+collection = "core-storage-meta-test"
+
+[kafka]
+topic = "core-storage-meta"
+group = "core-storage-meta-ingest"
+brokers = ["localhost:29092"]
+
+[grpc]
+bind_address = "0.0.0.0:4711"
+
+[log]
+level = "debug"

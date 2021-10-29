@@ -1,0 +1,56 @@
+syntax = "proto3";
+package meta_search;
+
+service Search {
+  // Our SayHello rpc accepts HelloRequests and returns HelloReplies
+  rpc Search (SearchRequest) returns (SearchReply);
+}
+
+enum ObjectType {
+  Object = 0;
+  ObjectGroup = 1;
+  Dataset = 2;
+}
+
+message Label {
+  string key = 1;
+  string value = 2;
+}
+
+message SearchRequest {
+  message Pagination {
+    uint32 page = 1;
+    uint32 page_size = 2;
+  }
+
+  optional string key = 1;
+  optional ObjectType object_type = 2;
+  repeated FieldQuery conditions = 3;
+  optional Pagination pagination = 4;
+}
+
+message FieldQuery {
+  string key = 1;
+  string query = 2;
+}
+
+message SearchReply {
+
+  message Pagination {
+    uint32 page = 1;
+    uint32 page_size = 2;
+    uint64 page_count = 3;
+    uint64 result_count = 4;
+  }
+
+  message SearchResult {
+    int64 id = 1;
+    string key = 2;
+    ObjectType object_type = 3;
+    repeated Label labels = 4;
+    string meta_data = 5;
+  }
+
+  repeated SearchResult results = 1;
+  Pagination pagination = 2;
+}

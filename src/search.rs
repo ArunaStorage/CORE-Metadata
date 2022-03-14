@@ -109,7 +109,7 @@ impl TryFrom<meta_search::SearchRequest> for SearchSpec {
         let mut doc = mongodb::bson::Document::new();
 
         if let Some(ot) = sr.object_type {
-            if let Some(ot) = meta_search::ObjectType::from_i32(ot) {
+            if let Some(ot) = meta_search::ResourceType::from_i32(ot) {
                 doc.insert("object_type", ot as i32);
             }
         };
@@ -146,22 +146,26 @@ impl TryFrom<meta_search::SearchRequest> for SearchSpec {
     }
 }
 
-impl From<meta_search::ObjectType> for data::ObjectType {
-    fn from(v: meta_search::ObjectType) -> Self {
+impl From<meta_search::ResourceType> for data::ObjectType {
+    fn from(v: meta_search::ResourceType) -> Self {
         match v {
-            meta_search::ObjectType::Object => data::ObjectType::Object,
-            meta_search::ObjectType::ObjectGroup => data::ObjectType::ObjectGroup,
-            meta_search::ObjectType::Dataset => data::ObjectType::Dataset,
+            meta_search::ResourceType::Object => data::ObjectType::Object,
+            meta_search::ResourceType::ObjectGroup => data::ObjectType::ObjectGroup,
+            meta_search::ResourceType::Dataset => data::ObjectType::Dataset,
+            meta_search::ResourceType::DatasetVersion => data::ObjectType::DatasetVersion,
+            meta_search::ResourceType::Project => data::ObjectType::Project,
         }
     }
 }
 
-impl From<data::ObjectType> for meta_search::ObjectType {
+impl From<data::ObjectType> for meta_search::ResourceType {
     fn from(v: data::ObjectType) -> Self {
         match v {
-            data::ObjectType::Object => meta_search::ObjectType::Object,
-            data::ObjectType::ObjectGroup => meta_search::ObjectType::ObjectGroup,
-            data::ObjectType::Dataset => meta_search::ObjectType::Dataset,
+            data::ObjectType::Object => meta_search::ResourceType::Object,
+            data::ObjectType::ObjectGroup => meta_search::ResourceType::ObjectGroup,
+            data::ObjectType::Dataset => meta_search::ResourceType::Dataset,
+            data::ObjectType::DatasetVersion => meta_search::ResourceType::DatasetVersion,
+            data::ObjectType::Project => meta_search::ResourceType::Project,
         }
     }
 }
@@ -178,9 +182,9 @@ impl From<data::Label> for meta_search::Label {
 impl From<MetaDataEntry> for meta_search::search_reply::SearchResult {
     fn from(entry: MetaDataEntry) -> Self {
         meta_search::search_reply::SearchResult {
-            id: entry.id,
+            resource_id: entry.resource_id,
             key: entry.key,
-            object_type: Into::<meta_search::ObjectType>::into(entry.object_type) as i32,
+            object_type: Into::<meta_search::ResourceType>::into(entry.object_type) as i32,
             meta_data: entry.metadata.to_string(),
             labels: entry.labels.into_iter().map(Into::into).collect(),
         }
@@ -241,7 +245,7 @@ async fn main() -> error::Result<()> {
     info!("Setting up metadata search.");
     debug!("Configuration: {:?}", &settings);
     info!("Connecting to MongoDB");
-    let mongo_client = util::setup_mongo("search", &settings.mongo).await?;
+    let mongo_client = util::setup_mongo(&settings.mongo).await?;
 
     let collection = mongo_client
         .database(settings.mongo.database.as_str())
@@ -272,7 +276,7 @@ mod tests {
     fn test_query_conversion_all_set() {
         let sr = meta_search::SearchRequest {
             key: Some("key".to_string()),
-            object_type: Some(meta_search::ObjectType::Dataset as i32),
+            object_type: Some(meta_search::ResourceType::Dataset as i32),
             conditions: vec![meta_search::FieldQuery {
                 key: "fancy_key".to_owned(),
                 query: "\"fancy_value\"".to_owned(),
@@ -287,7 +291,7 @@ mod tests {
         let query = spec.filter;
 
         let expected = mongodb::bson::doc! {
-            "object_type" : meta_search::ObjectType::Dataset as i32,
+            "object_type" : meta_search::ResourceType::Dataset as i32,
             "key": "key",
             "metadata.fancy_key" : "fancy_value"
         };
@@ -301,7 +305,7 @@ mod tests {
     fn test_query_conversion_no_pagination() {
         let sr = meta_search::SearchRequest {
             key: Some("key".to_string()),
-            object_type: Some(meta_search::ObjectType::Dataset as i32),
+            object_type: Some(meta_search::ResourceType::Dataset as i32),
             conditions: vec![meta_search::FieldQuery {
                 key: "fancy_key".to_owned(),
                 query: "\"fancy_value\"".to_owned(),
@@ -313,7 +317,7 @@ mod tests {
         let query = spec.filter;
 
         let expected = mongodb::bson::doc! {
-            "object_type" : meta_search::ObjectType::Dataset as i32,
+            "object_type" : meta_search::ResourceType::Dataset as i32,
             "key": "key",
             "metadata.fancy_key" : "fancy_value"
         };
@@ -327,7 +331,7 @@ mod tests {
     fn test_query_conversion_no_key() {
         let sr = meta_search::SearchRequest {
             key: None,
-            object_type: Some(meta_search::ObjectType::Dataset as i32),
+            object_type: Some(meta_search::ResourceType::Dataset as i32),
             conditions: vec![meta_search::FieldQuery {
                 key: "fancy_key".to_owned(),
                 query: "\"fancy_value\"".to_owned(),
@@ -339,7 +343,7 @@ mod tests {
         let query = spec.filter;
 
         let expected = mongodb::bson::doc! {
-            "object_type" : meta_search::ObjectType::Dataset as i32,
+            "object_type" : meta_search::ResourceType::Dataset as i32,
             "metadata.fancy_key" : "fancy_value"
         };
         assert_eq!(super::DEFAULT_PAGE, spec.page);
@@ -374,7 +378,7 @@ mod tests {
     fn test_query_conversion_no_metadata() {
         let sr = meta_search::SearchRequest {
             key: Some("key".to_string()),
-            object_type: Some(meta_search::ObjectType::Dataset as i32),
+            object_type: Some(meta_search::ResourceType::Dataset as i32),
             conditions: vec![],
             pagination: None,
         };
@@ -383,7 +387,7 @@ mod tests {
         let query = spec.filter;
 
         let expected = mongodb::bson::doc! {
-            "object_type" : meta_search::ObjectType::Dataset as i32,
+            "object_type" : meta_search::ResourceType::Dataset as i32,
             "key": "key"
         };
         assert_eq!(super::DEFAULT_PAGE, spec.page);
@@ -408,9 +412,7 @@ mod tests {
 
         let s: Settings = s.try_into().unwrap();
 
-        let client = crate::common::util::setup_mongo("search_test", &s.mongo)
-            .await
-            .unwrap();
+        let client = crate::common::util::setup_mongo(&s.mongo).await.unwrap();
 
         let collection_name =
             s.mongo.collection + Uuid::new_v4().to_hyphenated().to_string().as_str();
@@ -423,14 +425,14 @@ mod tests {
             .insert_many(
                 vec![
                     MetaDataEntry {
-                        id: 42,
+                        resource_id: "42".to_string(),
                         object_type: ObjectType::Dataset,
                         key: "Dataset".to_string(),
                         labels: vec![Label::new("purpose", "test")],
                         metadata: mongodb::bson::doc! { "key" : 350 },
                     },
                     MetaDataEntry {
-                        id: 43,
+                        resource_id: "43".to_string(),
                         object_type: ObjectType::ObjectGroup,
                         key: "ObjectGroup".to_string(),
                         labels: vec![Label::new("purpose", "test")],
@@ -468,8 +470,8 @@ mod tests {
 
         assert_eq!(2, r.pagination.unwrap().result_count);
         assert_eq!(2, r.results.len());
-        assert_eq!(43, r.results[0].id);
-        assert_eq!(42, r.results[1].id);
+        assert_eq!("42".to_string(), r.results[0].resource_id);
+        assert_eq!("43".to_string(), r.results[1].resource_id);
     }
 
     #[test]
@@ -495,7 +497,7 @@ mod tests {
 
         assert_eq!(2, r.pagination.unwrap().result_count);
         assert_eq!(1, r.results.len());
-        assert_eq!(43, r.results[0].id);
+        assert_eq!("42".to_string(), r.results[0].resource_id);
 
         let spec = SearchSpec {
             page: 2,
@@ -507,7 +509,7 @@ mod tests {
 
         assert_eq!(2, r.pagination.unwrap().result_count);
         assert_eq!(1, r.results.len());
-        assert_eq!(42, r.results[0].id);
+        assert_eq!("43".to_string(), r.results[0].resource_id);
     }
 
     #[test]
@@ -535,7 +537,7 @@ mod tests {
 
         assert_eq!(1, r.pagination.unwrap().result_count);
         assert_eq!(1, r.results.len());
-        assert_eq!(42, r.results[0].id);
+        assert_eq!("42".to_string(), r.results[0].resource_id);
     }
 
     #[test]
@@ -555,7 +557,7 @@ mod tests {
             page: 1,
             page_size: 10,
             filter: mongodb::bson::doc! {
-                "id" : 43
+                "resource_id" : "43"
             },
         };
 
@@ -563,7 +565,7 @@ mod tests {
 
         assert_eq!(1, r.pagination.unwrap().result_count);
         assert_eq!(1, r.results.len());
-        assert_eq!(43, r.results[0].id);
+        assert_eq!("43".to_string(), r.results[0].resource_id);
     }
 
     #[test]
@@ -618,7 +620,7 @@ mod tests {
 
         assert_eq!(1, r.pagination.unwrap().result_count);
         assert_eq!(1, r.results.len());
-        assert_eq!(42, r.results[0].id);
+        assert_eq!("42".to_string(), r.results[0].resource_id);
     }
 
     #[test]
@@ -675,7 +677,7 @@ mod tests {
 
         assert_eq!(1, r.pagination.unwrap().result_count);
         assert_eq!(1, r.results.len());
-        assert_eq!(42, r.results[0].id);
+        assert_eq!("42".to_string(), r.results[0].resource_id);
     }
 
     #[test]
@@ -735,7 +737,7 @@ mod tests {
 
         assert_eq!(2, r.pagination.unwrap().result_count);
         assert_eq!(2, r.results.len());
-        assert_eq!(43, r.results[0].id);
-        assert_eq!(42, r.results[1].id);
+        assert_eq!("42".to_string(), r.results[0].resource_id);
+        assert_eq!("43".to_string(), r.results[1].resource_id);
     }
 }

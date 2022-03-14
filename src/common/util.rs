@@ -1,7 +1,7 @@
 use flexi_logger::{LogSpecBuilder, Logger, LoggerHandle};
 use log::LevelFilter;
 use mongodb::bson::doc;
-use mongodb::options::{ClientOptions, ServerAddress};
+use mongodb::options::ClientOptions;
 use std::str::FromStr;
 
 use crate::common::settings::{LogSettings, MongoSettings};
@@ -19,18 +19,9 @@ pub fn setup_logger(module_name: &str, settings: &LogSettings) -> Result<LoggerH
         .start()?)
 }
 
-pub async fn setup_mongo(module_name: &str, settings: &MongoSettings) -> Result<mongodb::Client> {
-    let mut addresses: Vec<ServerAddress> = Vec::with_capacity(settings.servers.len());
-
-    for addr_str in settings.servers.iter() {
-        addresses.push(ServerAddress::parse(addr_str.as_str())?);
-    }
-
-    let client_options = ClientOptions::builder()
-        .hosts(addresses)
-        .app_name(Some(module_name.to_string()));
-
-    let client = mongodb::Client::with_options(client_options.build())?;
+pub async fn setup_mongo(settings: &MongoSettings) -> Result<mongodb::Client> {
+    let client_options = ClientOptions::parse(&settings.connection_string).await?;
+    let client = mongodb::Client::with_options(client_options)?;
 
     // Execute ping
     client

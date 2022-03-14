@@ -1,14 +1,14 @@
-consumer_count = 2
-
 [mongo]
-servers = ["localhost:27017"]
+connection_string = "mongodb://koerberm:ieThe6qu@localhost:27017/?w=majority&appName=MetadataLoader"
 database = "nfdi"
 collection = "core-storage-meta"
 
-[kafka]
-topic = "core-storage-meta"
-group = "core-storage-meta-ingest"
-brokers = ["localhost:29092"]
+[notifications]
+endpoint = "https://api.scienceobjectsdb.nfdi-dev.gi.denbi.de/swagger-ui/"
+api_token = "iyOeXsMAblp8C5VuohOtqeP+iZwBt1ATntXdd+xCs2teenSLBryHkvpNOUQy"
+project_id = "7d5337a4-fdbe-49b0-b779-432451c79e53"
+group = "CREATE"
+#group = "58825213-d70d-482b-94a6-07b11ce51556"
 
 [grpc]
 bind_address = "0.0.0.0:4711"

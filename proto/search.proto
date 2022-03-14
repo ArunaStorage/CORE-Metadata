@@ -6,10 +6,12 @@ service Search {
   rpc Search (SearchRequest) returns (SearchReply);
 }
 
-enum ObjectType {
-  Object = 0;
-  ObjectGroup = 1;
-  Dataset = 2;
+enum ResourceType {
+  Project = 0;
+  Dataset = 1;
+  DatasetVersion = 2;
+  ObjectGroup = 3;
+  Object = 4;
 }
 
 message Label {
@@ -24,7 +26,7 @@ message SearchRequest {
   }
 
   optional string key = 1;
-  optional ObjectType object_type = 2;
+  optional ResourceType object_type = 2;
   repeated FieldQuery conditions = 3;
   optional Pagination pagination = 4;
 }
@@ -44,9 +46,9 @@ message SearchReply {
   }
 
   message SearchResult {
-    int64 id = 1;
+    string resource_id = 1;
     string key = 2;
-    ObjectType object_type = 3;
+    ResourceType object_type = 3;
     repeated Label labels = 4;
     string meta_data = 5;
   }

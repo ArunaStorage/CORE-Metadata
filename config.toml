@@ -4,7 +4,7 @@ database = "nfdi"
 collection = "core-storage-meta"
 
 [notifications]
-endpoint = "https://api.scienceobjectsdb.nfdi-dev.gi.denbi.de/swagger-ui/"
+endpoint = "https://api.scienceobjectsdb.nfdi-dev.gi.denbi.de"
 api_token = "iyOeXsMAblp8C5VuohOtqeP+iZwBt1ATntXdd+xCs2teenSLBryHkvpNOUQy"
 project_id = "7d5337a4-fdbe-49b0-b779-432451c79e53"
 group = "CREATE"

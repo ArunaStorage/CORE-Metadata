@@ -300,8 +300,10 @@ impl MongoInserter {
         // delete old entries
         let del_result = collection
             .delete_many(
-                serde_json::from_value(serde_json::json!({ "id": resource.resource_id() }))
-                    .expect("Is valid json!"),
+                serde_json::from_value(
+                    serde_json::json!({ "resource_id": resource.resource_id() }),
+                )
+                .expect("Is valid json!"),
                 None,
             )
             .await?;
@@ -425,6 +427,13 @@ async fn main() -> Result<()> {
     debug!("Configuration: {:?}", &settings);
     info!("Connecting to MongoDB");
     let mongo_client = util::setup_mongo(&settings.mongo).await?;
+
+    let collection = mongo_client
+        .database(&settings.mongo.database)
+        .collection::<MetaDataEntry>(&settings.mongo.collection);
+
+    let document_count = collection.count_documents(None, None).await?;
+    info!("Currently indexed resources: {}", document_count);
 
     info!(
         "Setting up gRPC connection to {}",

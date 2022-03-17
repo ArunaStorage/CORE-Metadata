@@ -108,9 +108,9 @@ impl TryFrom<meta_search::SearchRequest> for SearchSpec {
     fn try_from(sr: meta_search::SearchRequest) -> Result<Self, Self::Error> {
         let mut doc = mongodb::bson::Document::new();
 
-        if let Some(ot) = sr.object_type {
+        if let Some(ot) = sr.resource_type {
             if let Some(ot) = meta_search::ResourceType::from_i32(ot) {
-                doc.insert("object_type", ot as i32);
+                doc.insert("resource_type", ot as i32);
             }
         };
 
@@ -184,7 +184,7 @@ impl From<MetaDataEntry> for meta_search::search_reply::SearchResult {
         meta_search::search_reply::SearchResult {
             resource_id: entry.resource_id,
             key: entry.key,
-            object_type: Into::<meta_search::ResourceType>::into(entry.object_type) as i32,
+            resource_type: Into::<meta_search::ResourceType>::into(entry.resource_type) as i32,
             meta_data: entry.metadata.to_string(),
             labels: entry.labels.into_iter().map(Into::into).collect(),
         }
@@ -276,7 +276,7 @@ mod tests {
     fn test_query_conversion_all_set() {
         let sr = meta_search::SearchRequest {
             key: Some("key".to_string()),
-            object_type: Some(meta_search::ResourceType::Dataset as i32),
+            resource_type: Some(meta_search::ResourceType::Dataset as i32),
             conditions: vec![meta_search::FieldQuery {
                 key: "fancy_key".to_owned(),
                 query: "\"fancy_value\"".to_owned(),
@@ -291,7 +291,7 @@ mod tests {
         let query = spec.filter;
 
         let expected = mongodb::bson::doc! {
-            "object_type" : meta_search::ResourceType::Dataset as i32,
+            "resource_type" : meta_search::ResourceType::Dataset as i32,
             "key": "key",
             "metadata.fancy_key" : "fancy_value"
         };
@@ -305,7 +305,7 @@ mod tests {
     fn test_query_conversion_no_pagination() {
         let sr = meta_search::SearchRequest {
             key: Some("key".to_string()),
-            object_type: Some(meta_search::ResourceType::Dataset as i32),
+            resource_type: Some(meta_search::ResourceType::Dataset as i32),
             conditions: vec![meta_search::FieldQuery {
                 key: "fancy_key".to_owned(),
                 query: "\"fancy_value\"".to_owned(),
@@ -317,7 +317,7 @@ mod tests {
         let query = spec.filter;
 
         let expected = mongodb::bson::doc! {
-            "object_type" : meta_search::ResourceType::Dataset as i32,
+            "resource_type" : meta_search::ResourceType::Dataset as i32,
             "key": "key",
             "metadata.fancy_key" : "fancy_value"
         };
@@ -331,7 +331,7 @@ mod tests {
     fn test_query_conversion_no_key() {
         let sr = meta_search::SearchRequest {
             key: None,
-            object_type: Some(meta_search::ResourceType::Dataset as i32),
+            resource_type: Some(meta_search::ResourceType::Dataset as i32),
             conditions: vec![meta_search::FieldQuery {
                 key: "fancy_key".to_owned(),
                 query: "\"fancy_value\"".to_owned(),
@@ -343,7 +343,7 @@ mod tests {
         let query = spec.filter;
 
         let expected = mongodb::bson::doc! {
-            "object_type" : meta_search::ResourceType::Dataset as i32,
+            "resource_type" : meta_search::ResourceType::Dataset as i32,
             "metadata.fancy_key" : "fancy_value"
         };
         assert_eq!(super::DEFAULT_PAGE, spec.page);
@@ -352,10 +352,10 @@ mod tests {
     }
 
     #[test]
-    fn test_query_conversion_no_object_type() {
+    fn test_query_conversion_no_resource_type() {
         let sr = meta_search::SearchRequest {
             key: Some("key".to_string()),
-            object_type: None,
+            resource_type: None,
             conditions: vec![meta_search::FieldQuery {
                 key: "fancy_key".to_owned(),
                 query: "\"fancy_value\"".to_owned(),
@@ -378,7 +378,7 @@ mod tests {
     fn test_query_conversion_no_metadata() {
         let sr = meta_search::SearchRequest {
             key: Some("key".to_string()),
-            object_type: Some(meta_search::ResourceType::Dataset as i32),
+            resource_type: Some(meta_search::ResourceType::Dataset as i32),
             conditions: vec![],
             pagination: None,
         };
@@ -387,7 +387,7 @@ mod tests {
         let query = spec.filter;
 
         let expected = mongodb::bson::doc! {
-            "object_type" : meta_search::ResourceType::Dataset as i32,
+            "resource_type" : meta_search::ResourceType::Dataset as i32,
             "key": "key"
         };
         assert_eq!(super::DEFAULT_PAGE, spec.page);
@@ -426,14 +426,14 @@ mod tests {
                 vec![
                     MetaDataEntry {
                         resource_id: "42".to_string(),
-                        object_type: ObjectType::Dataset,
+                        resource_type: ObjectType::Dataset,
                         key: "Dataset".to_string(),
                         labels: vec![Label::new("purpose", "test")],
                         metadata: mongodb::bson::doc! { "key" : 350 },
                     },
                     MetaDataEntry {
                         resource_id: "43".to_string(),
-                        object_type: ObjectType::ObjectGroup,
+                        resource_type: ObjectType::ObjectGroup,
                         key: "ObjectGroup".to_string(),
                         labels: vec![Label::new("purpose", "test")],
                         metadata: mongodb::bson::doc! { "key" : 400 },
@@ -529,7 +529,7 @@ mod tests {
             page: 1,
             page_size: 10,
             filter: mongodb::bson::doc! {
-                "object_type": crate::data::ObjectType::Dataset
+                "resource_type": crate::data::ObjectType::Dataset
             },
         };
 
@@ -727,7 +727,7 @@ mod tests {
             page_size: 10,
             filter: mongodb::bson::doc! {
                 "$or": [
-                    {"object_type": {"$regex": "data.*", "$options": "i"}},
+                    {"resource_type": {"$regex": "data.*", "$options": "i"}},
                     {"metadata.key": { "$gt": 350 }}
                 ]
             },

@@ -22,7 +22,7 @@ fn map_metadata(
                 .ok()
                 .map(|json| MetaDataEntry {
                     resource_id: resource_id.to_string(),
-                    object_type: object_type.clone(),
+                    resource_type: object_type.clone(),
                     key: m.key.to_string(),
                     labels: m
                         .labels
@@ -130,7 +130,7 @@ impl Label {
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct MetaDataEntry {
     pub resource_id: String,
-    pub object_type: ObjectType,
+    pub resource_type: ObjectType,
     pub key: String,
     pub labels: Vec<Label>,
     pub metadata: Document,

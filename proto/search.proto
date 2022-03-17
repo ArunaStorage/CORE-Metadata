@@ -2,7 +2,6 @@ syntax = "proto3";
 package meta_search;
 
 service Search {
-  // Our SayHello rpc accepts HelloRequests and returns HelloReplies
   rpc Search (SearchRequest) returns (SearchReply);
 }
 
@@ -26,7 +25,7 @@ message SearchRequest {
   }
 
   optional string key = 1;
-  optional ResourceType object_type = 2;
+  optional ResourceType resource_type = 2;
   repeated FieldQuery conditions = 3;
   optional Pagination pagination = 4;
 }
@@ -48,7 +47,7 @@ message SearchReply {
   message SearchResult {
     string resource_id = 1;
     string key = 2;
-    ResourceType object_type = 3;
+    ResourceType resource_type = 3;
     repeated Label labels = 4;
     string meta_data = 5;
   }

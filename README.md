@@ -16,13 +16,13 @@ which answers search requests.
 ## MongoDB
 The structure of the MongoDB instance is flat. Currently the search uses a single Collection that stores all metadata. The
 documents of this collection follow a defined schema:
-```json
+```
 {
-  resource_id: String,     // The id of the resource this metadatum belongs to
-  object_type: ObjectType, // The resource type (e.g., Dataset, ObjectGroup, ...)
-  key: String,             // The key used to store the metadata
-  labels: Vec<Label>,      // An optional set of key-value pairs
-  metadata: {...},         // The actual metadata JSON. 
+  resource_id: String,         // The id of the resource this metadatum belongs to
+  resource_type: ResourceType, // The resource type (e.g., Dataset, ObjectGroup, ...)
+  key: String,                 // The key used to store the metadata
+  labels: Vec<Label>,          // An optional set of key-value pairs
+  metadata: {...},             // The actual metadata JSON. 
 }
 ```
 This allows as apply a variety of filter combinations easily.
@@ -69,6 +69,7 @@ and the value a valid mongo-db query (e.g., `"MIT"` or `{"$regex": ".*GPL.*", "$
 filter conditions.
 
 **NOTE2:** The search server contains several tests that require a running mongodb instance. You can change the test configuration in `settings_test.toml`.
+
 ---
 
 

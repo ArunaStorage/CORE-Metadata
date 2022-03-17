@@ -38,9 +38,11 @@ The API endpoint, the required API-token as well as the notification group id ar
 section `[notifications]`.
 
 ---
+
 **NOTE:**
 Due to the early stage of development, the group-id may be set to the value `"CREATE"` which creates a new notification
 group upon startup. If set to create, the config also requires a valid `project_id` to subscribe to. 
+
 ---
 
 For each received batch of notifications, the loader performs the following actions:
@@ -65,6 +67,7 @@ A field query is basically a key/value pair. The key refers to a field within th
 and the value a valid mongo-db query (e.g., `"MIT"` or `{"$regex": ".*GPL.*", "$options": "i"}`).
 
 ---
+
 **NOTE:** All filters are combined via a logical AND operations. This means all returned results satisfy all of the
 filter conditions.
 
